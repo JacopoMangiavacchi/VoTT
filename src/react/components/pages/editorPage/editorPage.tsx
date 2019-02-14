@@ -304,6 +304,8 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
 
     private selectAsset = async (asset: IAsset): Promise<void> => {
         const assetMetadata = await this.props.actions.loadAssetMetadata(this.props.project, asset);
+        await this.updateProjectTagsFromAsset(assetMetadata);
+
         if (assetMetadata.asset.state === AssetState.NotVisited) {
             assetMetadata.asset.state = AssetState.Visited;
         }
@@ -322,6 +324,30 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         this.setState({
             selectedAsset: assetMetadata,
         });
+    }
+
+    private async updateProjectTagsFromAsset(asset: IAssetMetadata) {
+        const assetTags = new Set();
+        asset.regions.forEach((region) => region.tags.forEach((tag) => assetTags.add(tag.name)));
+
+        const newTags: ITag[] = this.state.project.tags ? this.state.project.tags.slice() : [];
+        let updateTags = false;
+
+        assetTags.forEach((tag) => {
+            if (!this.state.project.tags || this.state.project.tags.length === 0 ||
+                this.state.project.tags.filter((projectTag) => tag === projectTag.name).length === 0 ) {
+                newTags.push({
+                    name: tag,
+                    color: "",
+                });
+                updateTags = true;
+            }
+        });
+
+        if (updateTags) {
+            const newProject = {...this.state.project, tags: newTags};
+            await this.props.actions.saveProject(newProject);
+        }
     }
 
     private loadProjectAssets = async (): Promise<void> => {
