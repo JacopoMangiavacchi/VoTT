@@ -8,7 +8,7 @@ import { TagsDescriptor } from "vott-ct/lib/js/CanvasTools/Core/TagsDescriptor";
 import HtmlFileReader from "../../../../common/htmlFileReader";
 import {
     AssetState, EditorMode, IApplicationState, IAsset,
-    IAssetMetadata, IProject, ITag,
+    IAssetMetadata, IProject, ITag, AssetType,
 } from "../../../../models/applicationState";
 import { IToolbarItemRegistration, ToolbarItemFactory } from "../../../../providers/toolbar/toolbarItemFactory";
 import IProjectActions, * as projectActions from "../../../../redux/actions/projectActions";
@@ -322,6 +322,16 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         this.setState({
             selectedAsset: assetMetadata,
         });
+
+        // debugger;
+        // if (asset.type === AssetType.VideoFrame) {
+        //     HtmlFileReader.getAssetFrameImage(asset, (img, secs, event) => {
+        //         console.log(img);
+        //         console.log(secs);
+        //         console.log(event);
+        //         return img;
+        //     });
+        // }
     }
 
     private loadProjectAssets = async (): Promise<void> => {
