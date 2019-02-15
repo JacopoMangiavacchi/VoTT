@@ -186,6 +186,15 @@ describe("Editor Page Component", () => {
             name: testProject.name,
         };
 
+        const partialProjectToBeSaved = {
+            id: testProject.id,
+            name: testProject.name,
+            tags: expect.arrayContaining([{
+                name: "NEWTAG",
+                color: "#808000",
+            }]),
+        };
+
         const expectedAssetMetadtata: IAssetMetadata = getMockAssetMetadata(testAssets);
 
         await MockFactory.flushUi();
@@ -195,7 +204,7 @@ describe("Editor Page Component", () => {
             expect.objectContaining(partialProject),
             expectedAssetMetadtata,
         );
-        expect(saveProjectSpy).toBeCalledWith(expect.objectContaining(partialProject));
+        expect(saveProjectSpy).toBeCalledWith(expect.objectContaining(partialProjectToBeSaved));
     });
 
     describe("Basic toolbar test", () => {
