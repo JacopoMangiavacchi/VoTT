@@ -51,7 +51,7 @@ function getState(wrapper): IEditorPageState {
 }
 
 function getMockAssetMetadata(testAssets, assetIndex = 0): IAssetMetadata {
-    const mockRegion = MockFactory.createMockRegion();
+    const mockRegion = MockFactory.createMockRegion(null, "NEWTAG");
     const assetMetadata = {
         asset: {
             ...testAssets[assetIndex],
@@ -90,7 +90,7 @@ describe("Editor Page Component", () => {
         assetServiceMock.prototype.getAssetMetadata = jest.fn((asset) => {
             const assetMetadata: IAssetMetadata = {
                 asset: { ...asset },
-                regions: [MockFactory.createMockRegion()],
+                regions: [MockFactory.createMockRegion(null, "NEWTAG")],
             };
             return Promise.resolve(assetMetadata);
         });
