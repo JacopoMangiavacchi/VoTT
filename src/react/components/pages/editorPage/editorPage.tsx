@@ -8,7 +8,7 @@ import { TagsDescriptor } from "vott-ct/lib/js/CanvasTools/Core/TagsDescriptor";
 import HtmlFileReader from "../../../../common/htmlFileReader";
 import {
     AssetState, EditorMode, IApplicationState, IAsset,
-    IAssetMetadata, IProject, ITag, AssetType,
+    IAssetMetadata, IProject, ITag, AssetType, RegionType,
 } from "../../../../models/applicationState";
 import { IToolbarItemRegistration, ToolbarItemFactory } from "../../../../providers/toolbar/toolbarItemFactory";
 import IProjectActions, * as projectActions from "../../../../redux/actions/projectActions";
@@ -25,6 +25,7 @@ import { AssetService } from "../../../../services/assetService";
 import { AssetPreview, IAssetPreviewSettings } from "../../common/assetPreview/assetPreview";
 import * as cocoSsd from "@tensorflow-models/coco-ssd";
 import "@tensorflow/tfjs";
+import * as shortid from "shortid";
 
 /**
  * Properties for Editor Page
@@ -361,8 +362,38 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                         const predictions = await model.detect(image);
                         console.log(predictions);
 
-                        // Save & Refresh
-                        await this.props.actions.saveAssetMetadata(this.props.project, this.state.selectedAsset);
+                        const regions = [...this.state.selectedAsset.regions];
+                        predictions.forEach((prediction) => {
+                            regions.push({
+                                id: shortid.generate(),
+                                type: RegionType.Rectangle,
+                                tags: [prediction.class],
+                                boundingBox: {
+                                    left: prediction.bbox[0],
+                                    top: prediction.bbox[1],
+                                    width: prediction.bbox[0] + prediction.bbox[2],
+                                    height: prediction.bbox[1] + prediction.bbox[3],
+                                },
+                                points: [{
+                                    x: prediction.bbox[0],
+                                    y: prediction.bbox[1],
+                                },
+                                {
+                                    x: prediction.bbox[2],
+                                    y: prediction.bbox[3],
+                                }],
+                            });
+                        });
+
+                        const newAsset = {...this.state.selectedAsset, regions};
+                        console.log(newAsset);
+
+                        this.setState({
+                            selectedAsset: newAsset,
+                        });
+
+                        // Save
+                        await this.props.actions.saveAssetMetadata(this.props.project, newAsset);
                         await this.props.actions.saveProject(this.props.project);
                     };
                     image.src = "data:image;base64," + image64;
