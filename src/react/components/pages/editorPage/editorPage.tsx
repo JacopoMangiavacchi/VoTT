@@ -360,6 +360,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                     const image = document.createElement("img") as HTMLImageElement;
                     image.onload = async () => {
                         const predictions = await model.detect(image);
+                        console.log(image.x, image.y, image.width, image.height);
                         console.log(predictions);
 
                         const regions = [...this.state.selectedAsset.regions];
@@ -369,18 +370,26 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                                 type: RegionType.Rectangle,
                                 tags: [prediction.class],
                                 boundingBox: {
-                                    left: prediction.bbox[0],
-                                    top: prediction.bbox[1],
-                                    width: prediction.bbox[0] + prediction.bbox[2],
-                                    height: prediction.bbox[1] + prediction.bbox[3],
+                                    left: Math.max(0, prediction.bbox[0]),
+                                    top: Math.max(0, prediction.bbox[1]),
+                                    width: Math.max(0, prediction.bbox[2]),
+                                    height: Math.max(0, prediction.bbox[3]),
                                 },
                                 points: [{
-                                    x: prediction.bbox[0],
-                                    y: prediction.bbox[1],
+                                    x: Math.max(0, prediction.bbox[0]),
+                                    y: Math.max(0, prediction.bbox[1]),
                                 },
                                 {
-                                    x: prediction.bbox[2],
-                                    y: prediction.bbox[3],
+                                    x: Math.max(0, prediction.bbox[0]) + Math.max(0, prediction.bbox[2]),
+                                    y: Math.max(0, prediction.bbox[1]),
+                                },
+                                {
+                                    x: Math.max(0, prediction.bbox[0]) + Math.max(0, prediction.bbox[2]),
+                                    y: Math.max(0, prediction.bbox[1]) + Math.max(0, prediction.bbox[3]),
+                                },
+                                {
+                                    x: Math.max(0, prediction.bbox[0]),
+                                    y: Math.max(0, prediction.bbox[1]) + Math.max(0, prediction.bbox[3]),
                                 }],
                             });
                         });
