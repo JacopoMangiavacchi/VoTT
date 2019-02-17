@@ -37,6 +37,14 @@ export default function registerToolbar() {
         type: ToolbarItemType.State,
     });
 
+    ToolbarItemFactory.register(ActiveLearning, {
+        name: "activeLearning",
+        tooltip: "Active Learning",
+        icon: "fas fa-graduation-cap",
+        group: "canvas",
+        type: ToolbarItemType.Action,
+    });
+
     ToolbarItemFactory.register(PreviousAsset, {
         name: "navigatePreviousAsset",
         tooltip: "Previous Asset",
@@ -68,14 +76,6 @@ export default function registerToolbar() {
         tooltip: "Export Project",
         icon: "fa-external-link-square-alt",
         group: "project",
-        type: ToolbarItemType.Action,
-    });
-
-    ToolbarItemFactory.register(ActiveLearning, {
-        name: "activeLearning",
-        tooltip: "Active Learning",
-        icon: "fa-vector-square",
-        group: "canvas",
         type: ToolbarItemType.Action,
     });
 }

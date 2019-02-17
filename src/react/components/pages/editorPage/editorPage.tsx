@@ -23,6 +23,8 @@ import { KeyboardBinding } from "../../common/keyboardBinding/keyboardBinding";
 import { KeyEventType } from "../../common/keyboardManager/keyboardManager";
 import { AssetService } from "../../../../services/assetService";
 import { AssetPreview, IAssetPreviewSettings } from "../../common/assetPreview/assetPreview";
+import * as cocoSsd from "@tensorflow-models/coco-ssd";
+import "@tensorflow/tfjs";
 
 /**
  * Properties for Editor Page
@@ -87,6 +89,9 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
     private loadingProjectAssets: boolean = false;
     private toolbarItems: IToolbarItemRegistration[] = ToolbarItemFactory.getToolbarItems();
     private canvas: RefObject<Canvas> = React.createRef();
+
+    // TODO: Remove this.  Actually needed as the toolbar event is called twice
+    private skipActiveLearning = true;
 
     public async componentDidMount() {
         const projectId = this.props.match.params["projectId"];
@@ -341,10 +346,29 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                 await this.goToRootAsset(1);
                 break;
             case "activeLearning":
-                console.log("activeLearning");
+                // TODO: Remove if.  Actually needed as the toolbar event is called twice
+                if (!this.skipActiveLearning) {
+                    // TODO: Optimize share the model at project level
+                    const model = await cocoSsd.load();
 
-                // TODO
+                    // TODO: Shortcut get image directly from document.getElementById("image");
+                    // const image = document.getElementById("image");
+                    const imageBuffer = await HtmlFileReader.getAssetArray(this.state.selectedAsset.asset);
+                    const image64 = btoa(imageBuffer.reduce((data, byte) => data + String.fromCharCode(byte), ""));
 
+                    const image = document.createElement("img") as HTMLImageElement;
+                    image.onload = async () => {
+                        const predictions = await model.detect(image);
+                        console.log(predictions);
+
+                        // Save & Refresh
+                        await this.props.actions.saveAssetMetadata(this.props.project, this.state.selectedAsset);
+                        await this.props.actions.saveProject(this.props.project);
+                    };
+                    image.src = "data:image;base64," + image64;
+                }
+
+                this.skipActiveLearning = !this.skipActiveLearning;
                 break;
         }
     }
