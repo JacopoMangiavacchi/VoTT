@@ -340,6 +340,12 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
             case "navigateNextAsset":
                 await this.goToRootAsset(1);
                 break;
+            case "activeLearning":
+                console.log("activeLearning");
+
+                // TODO
+
+                break;
         }
     }
 

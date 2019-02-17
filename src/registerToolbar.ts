@@ -7,6 +7,7 @@ import { DrawPolygon } from "./react/components/toolbar/drawPolygon";
 import { ToolbarItemType } from "./react/components/toolbar/toolbarItem";
 import { NextAsset } from "./react/components/toolbar/nextAsset";
 import { PreviousAsset } from "./react/components/toolbar/previousAsset";
+import { ActiveLearning } from "./react/components/toolbar/activeLearning";
 
 /**
  * Registers items for toolbar
@@ -67,6 +68,14 @@ export default function registerToolbar() {
         tooltip: "Export Project",
         icon: "fa-external-link-square-alt",
         group: "project",
+        type: ToolbarItemType.Action,
+    });
+
+    ToolbarItemFactory.register(ActiveLearning, {
+        name: "activeLearning",
+        tooltip: "Active Learning",
+        icon: "fa-vector-square",
+        group: "canvas",
         type: ToolbarItemType.Action,
     });
 }
