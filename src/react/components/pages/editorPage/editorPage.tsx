@@ -97,7 +97,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
 
     public async componentDidMount() {
         // TODO: Optimize share the model at project level
-        this.model = await cocoSsd.load();
+        this.model = await cocoSsd.load("mobilenet_v2");
 
         const projectId = this.props.match.params["projectId"];
         if (this.props.project) {
@@ -400,6 +400,8 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
 
                         const newAsset = {...this.state.selectedAsset, regions};
                         console.log(newAsset);
+
+                        this.onAssetMetadataChanged(newAsset);
 
                         this.setState({
                             selectedAsset: newAsset,
