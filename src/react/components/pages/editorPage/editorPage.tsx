@@ -90,11 +90,15 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
     private loadingProjectAssets: boolean = false;
     private toolbarItems: IToolbarItemRegistration[] = ToolbarItemFactory.getToolbarItems();
     private canvas: RefObject<Canvas> = React.createRef();
+    private model: any;  // ObjectDetection
 
     // TODO: Remove this.  Actually needed as the toolbar event is called twice
     private skipActiveLearning = true;
 
     public async componentDidMount() {
+        // TODO: Optimize share the model at project level
+        this.model = await cocoSsd.load();
+
         const projectId = this.props.match.params["projectId"];
         if (this.props.project) {
             await this.loadProjectAssets();
@@ -349,17 +353,17 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
             case "activeLearning":
                 // TODO: Remove if.  Actually needed as the toolbar event is called twice
                 if (!this.skipActiveLearning) {
-                    // TODO: Optimize share the model at project level
-                    const model = await cocoSsd.load();
-
                     // TODO: Shortcut get image directly from document.getElementById("image");
-                    // const image = document.getElementById("image");
+                    // const image = document.getElementById("Jacopo") as HTMLImageElement;
+                    // const predictions = await this.model.detect(image);
+                    // console.log(image.x, image.y, image.width, image.height);
+                    // console.log(predictions);
+
                     const imageBuffer = await HtmlFileReader.getAssetArray(this.state.selectedAsset.asset);
                     const image64 = btoa(imageBuffer.reduce((data, byte) => data + String.fromCharCode(byte), ""));
-
                     const image = document.createElement("img") as HTMLImageElement;
                     image.onload = async () => {
-                        const predictions = await model.detect(image);
+                        const predictions = await this.model.detect(image);
                         console.log(image.x, image.y, image.width, image.height);
                         console.log(predictions);
 
