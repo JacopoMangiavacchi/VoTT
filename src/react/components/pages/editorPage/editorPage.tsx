@@ -8,7 +8,7 @@ import { TagsDescriptor } from "vott-ct/lib/js/CanvasTools/Core/TagsDescriptor";
 import HtmlFileReader from "../../../../common/htmlFileReader";
 import {
     AssetState, EditorMode, IApplicationState, IAsset,
-    IAssetMetadata, IProject, ITag, AssetType,
+    IAssetMetadata, IProject, ITag, AssetType, RegionType,
 } from "../../../../models/applicationState";
 import { IToolbarItemRegistration, ToolbarItemFactory } from "../../../../providers/toolbar/toolbarItemFactory";
 import IProjectActions, * as projectActions from "../../../../redux/actions/projectActions";
@@ -23,6 +23,9 @@ import { KeyboardBinding } from "../../common/keyboardBinding/keyboardBinding";
 import { KeyEventType } from "../../common/keyboardManager/keyboardManager";
 import { AssetService } from "../../../../services/assetService";
 import { AssetPreview, IAssetPreviewSettings } from "../../common/assetPreview/assetPreview";
+import * as cocoSsd from "@tensorflow-models/coco-ssd";
+import "@tensorflow/tfjs";
+import * as shortid from "shortid";
 
 /**
  * Properties for Editor Page
@@ -87,8 +90,15 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
     private loadingProjectAssets: boolean = false;
     private toolbarItems: IToolbarItemRegistration[] = ToolbarItemFactory.getToolbarItems();
     private canvas: RefObject<Canvas> = React.createRef();
+    private model: any;  // ObjectDetection
+
+    // TODO: Remove this.  Actually needed as the toolbar event is called twice
+    private skipActiveLearning = true;
 
     public async componentDidMount() {
+        // TODO: Optimize share the model at project level
+        this.model = await cocoSsd.load("mobilenet_v2");
+
         const projectId = this.props.match.params["projectId"];
         if (this.props.project) {
             await this.loadProjectAssets();
@@ -339,6 +349,72 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                 break;
             case "navigateNextAsset":
                 await this.goToRootAsset(1);
+                break;
+            case "activeLearning":
+                // TODO: Remove if.  Actually needed as the toolbar event is called twice
+                if (!this.skipActiveLearning) {
+                    // TODO: Shortcut get image directly from document.getElementById("image");
+                    // const image = document.getElementById("Jacopo") as HTMLImageElement;
+                    // const predictions = await this.model.detect(image);
+                    // console.log(image.x, image.y, image.width, image.height);
+                    // console.log(predictions);
+
+                    const imageBuffer = await HtmlFileReader.getAssetArray(this.state.selectedAsset.asset);
+                    const image64 = btoa(imageBuffer.reduce((data, byte) => data + String.fromCharCode(byte), ""));
+                    const image = document.createElement("img") as HTMLImageElement;
+                    image.onload = async () => {
+                        const predictions = await this.model.detect(image);
+                        console.log(image.x, image.y, image.width, image.height);
+                        console.log(predictions);
+
+                        const regions = [...this.state.selectedAsset.regions];
+                        predictions.forEach((prediction) => {
+                            regions.push({
+                                id: shortid.generate(),
+                                type: RegionType.Rectangle,
+                                tags: [prediction.class],
+                                boundingBox: {
+                                    left: Math.max(0, prediction.bbox[0]),
+                                    top: Math.max(0, prediction.bbox[1]),
+                                    width: Math.max(0, prediction.bbox[2]),
+                                    height: Math.max(0, prediction.bbox[3]),
+                                },
+                                points: [{
+                                    x: Math.max(0, prediction.bbox[0]),
+                                    y: Math.max(0, prediction.bbox[1]),
+                                },
+                                {
+                                    x: Math.max(0, prediction.bbox[0]) + Math.max(0, prediction.bbox[2]),
+                                    y: Math.max(0, prediction.bbox[1]),
+                                },
+                                {
+                                    x: Math.max(0, prediction.bbox[0]) + Math.max(0, prediction.bbox[2]),
+                                    y: Math.max(0, prediction.bbox[1]) + Math.max(0, prediction.bbox[3]),
+                                },
+                                {
+                                    x: Math.max(0, prediction.bbox[0]),
+                                    y: Math.max(0, prediction.bbox[1]) + Math.max(0, prediction.bbox[3]),
+                                }],
+                            });
+                        });
+
+                        const newAsset = {...this.state.selectedAsset, regions};
+                        console.log(newAsset);
+
+                        this.onAssetMetadataChanged(newAsset);
+
+                        this.setState({
+                            selectedAsset: newAsset,
+                        });
+
+                        // Save
+                        await this.props.actions.saveAssetMetadata(this.props.project, newAsset);
+                        await this.props.actions.saveProject(this.props.project);
+                    };
+                    image.src = "data:image;base64," + image64;
+                }
+
+                this.skipActiveLearning = !this.skipActiveLearning;
                 break;
         }
     }

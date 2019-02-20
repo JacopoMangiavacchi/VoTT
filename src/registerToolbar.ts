@@ -7,6 +7,7 @@ import { DrawPolygon } from "./react/components/toolbar/drawPolygon";
 import { ToolbarItemType } from "./react/components/toolbar/toolbarItem";
 import { NextAsset } from "./react/components/toolbar/nextAsset";
 import { PreviousAsset } from "./react/components/toolbar/previousAsset";
+import { ActiveLearning } from "./react/components/toolbar/activeLearning";
 
 /**
  * Registers items for toolbar
@@ -34,6 +35,14 @@ export default function registerToolbar() {
         icon: "fa-draw-polygon",
         group: "canvas",
         type: ToolbarItemType.State,
+    });
+
+    ToolbarItemFactory.register(ActiveLearning, {
+        name: "activeLearning",
+        tooltip: "Active Learning",
+        icon: "fas fa-graduation-cap",
+        group: "canvas",
+        type: ToolbarItemType.Action,
     });
 
     ToolbarItemFactory.register(PreviousAsset, {
